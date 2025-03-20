@@ -2,6 +2,9 @@
 const taskInput = document.getElementById("taskInput");
 const addTaskBtn = document.getElementById("addTask");
 const taskList = document.getElementById("taskList");
+const showAllBtn = document.getElementById("showAll");
+const showCompletedBtn = document.getElementById("showCompleted");
+const showPendingBtn = document.getElementById("showPending");
 
 
 document.addEventListener("DOMContentLoaded", loadTasks);
@@ -9,7 +12,6 @@ document.addEventListener("DOMContentLoaded", loadTasks);
 
 function addTask() {
     const taskText = taskInput.value.trim();
-
     if (taskText === "") {
         alert("Task cannot be empty!");
         return;
@@ -18,13 +20,10 @@ function addTask() {
     const taskObj = { text: taskText, completed: false };
 
     createTaskElement(taskObj);
-
     saveTask(taskObj);
-
 
     taskInput.value = "";
 }
-
 
 function createTaskElement(taskObj) {
     const li = document.createElement("li");
@@ -47,8 +46,9 @@ function createTaskElement(taskObj) {
         li.remove();
         removeTask(taskObj.text);
     });
-}
 
+    li.dataset.completed = taskObj.completed;
+}
 
 function saveTask(taskObj) {
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
@@ -59,18 +59,18 @@ function saveTask(taskObj) {
 
 function loadTasks() {
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    taskList.innerHTML = "";
     tasks.forEach(createTaskElement);
 }
 
 
 function updateTaskStatus(taskText, completed) {
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    tasks = tasks.map(task => 
+    tasks = tasks.map(task =>
         task.text === taskText ? { ...task, completed } : task
     );
     localStorage.setItem("tasks", JSON.stringify(tasks));
 }
-
 
 function removeTask(taskText) {
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
@@ -78,10 +78,28 @@ function removeTask(taskText) {
     localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
+function filterTasks(filterType) {
+    const tasks = document.querySelectorAll("li");
+    tasks.forEach(task => {
+        const isCompleted = task.dataset.completed === "true";
+
+        if (filterType === "all") {
+            task.style.display = "flex";
+        } else if (filterType === "completed" && isCompleted) {
+            task.style.display = "flex";
+        } else if (filterType === "pending" && !isCompleted) {
+            task.style.display = "flex";
+        } else {
+            task.style.display = "none";
+        }
+    });
+}
+
+showAllBtn.addEventListener("click", () => filterTasks("all"));
+showCompletedBtn.addEventListener("click", () => filterTasks("completed"));
+showPendingBtn.addEventListener("click", () => filterTasks("pending"));
 
 addTaskBtn.addEventListener("click", addTask);
-
-
 taskInput.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
         addTask();

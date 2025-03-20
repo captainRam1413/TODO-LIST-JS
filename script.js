@@ -5,7 +5,16 @@ const taskList = document.getElementById("taskList");
 const showAllBtn = document.getElementById("showAll");
 const showCompletedBtn = document.getElementById("showCompleted");
 const showPendingBtn = document.getElementById("showPending");
+const clearAllBtn = document.getElementById("clearAll");
 
+function clearAllTasks() {
+    if (confirm("Are you sure you want to delete all tasks?")) {
+        taskList.innerHTML = "";
+        localStorage.removeItem("tasks"); 
+    }
+}
+
+clearAllBtn.addEventListener("click", clearAllTasks);
 
 document.addEventListener("DOMContentLoaded", loadTasks);
 

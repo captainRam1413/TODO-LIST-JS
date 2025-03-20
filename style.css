@@ -44,6 +44,20 @@ body {
     background: #0056b3;
 }
 
+#clearAll {
+    margin-top: 10px;
+    padding: 10px 15px;
+    border: none;
+    background: red;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#clearAll:hover {
+    background: darkred;
+}
+
 
 h1 {
     margin-bottom: 10px;

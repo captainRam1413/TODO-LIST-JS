@@ -8,6 +8,8 @@ const showPendingBtn = document.getElementById("showPending");
 const clearAllBtn = document.getElementById("clearAll");
 const dueDateInput = document.getElementById("dueDate");
 const searchTaskInput = document.getElementById("searchTask");
+const sortTasksDropdown = document.getElementById("sortTasks");
+
 
 function clearAllTasks() {
     if (confirm("Are you sure you want to delete all tasks?")) {
@@ -71,6 +73,49 @@ function createTaskElement(taskObj) {
     li.dataset.completed = taskObj.completed; // Add dataset for filtering
 }
 
+function checkDueDates() {
+    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+    document.querySelectorAll(".due-date").forEach(dueDateEl => {
+        if (dueDateEl.textContent.includes("Due:")) {
+            const taskDueDate = dueDateEl.textContent.replace("Due: ", "").trim();
+            if (taskDueDate < today) {
+                dueDateEl.classList.add("overdue");
+            } else {
+                dueDateEl.classList.remove("overdue");
+            }
+        }
+    });
+}
+
+// Function to sort tasks
+function sortTasks() {
+    const sortBy = sortTasksDropdown.value;
+    let tasks = Array.from(document.querySelectorAll("#taskList li"));
+
+    if (sortBy === "dueDate") {
+        tasks.sort((a, b) => {
+            const dateA = a.querySelector(".due-date").textContent.replace("Due: ", "").trim();
+            const dateB = b.querySelector(".due-date").textContent.replace("Due: ", "").trim();
+            return new Date(dateA) - new Date(dateB);
+        });
+    } else if (sortBy === "completed") {
+        tasks.sort((a, b) => {
+            const completedA = a.dataset.completed === "true" ? 1 : 0;
+            const completedB = b.dataset.completed === "true" ? 1 : 0;
+            return completedA - completedB; // Sort uncompleted tasks first
+        });
+    }
+
+    // Clear and re-add sorted tasks
+    taskList.innerHTML = "";
+    tasks.forEach(task => taskList.appendChild(task));
+}
+
+// Event Listener for sorting
+sortTasksDropdown.addEventListener("change", sortTasks);
+
+// Call checkDueDates when page loads
+document.addEventListener("DOMContentLoaded", checkDueDates);
 
 function saveTask(taskObj) {
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];

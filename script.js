@@ -1,68 +1,89 @@
+
 const taskInput = document.getElementById("taskInput");
-const taskList = document.getElementById("taskList");
 const addTaskBtn = document.getElementById("addTask");
+const taskList = document.getElementById("taskList");
 
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("load event fired");
 
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    tasks.forEach((task) => {
-        const listItem = document.createElement("li");
-        listItem.innerHTML = `<span>${task}</span><button class="delete-btn">x</button>`;
-        taskList.appendChild(listItem);
+document.addEventListener("DOMContentLoaded", loadTasks);
 
-        listItem
-            .querySelector(".delete-btn")
-            .addEventListener("click", function () {
-                listItem.remove();
-                removeTask(task);
-            });
-    });
-});
 
-function addItem() {
-    const text = taskInput.value.trim();
+function addTask() {
+    const taskText = taskInput.value.trim();
 
-    if (text === "") {
-        alert("Input cannot be empty");
-    } else {
-        const listItem = document.createElement("li");
-
-        listItem.innerHTML = `<span>${text}</span><button class="delete-btn">x</button>`;
-
-        taskList.appendChild(listItem);
-
-        saveTask(text);
-
-        taskInput.value = "";
-
-        listItem
-            .querySelector(".delete-btn")
-            .addEventListener("click", function () {
-                listItem.remove();
-                removeTask(text);
-            });
+    if (taskText === "") {
+        alert("Task cannot be empty!");
+        return;
     }
+
+    const taskObj = { text: taskText, completed: false };
+
+    createTaskElement(taskObj);
+
+    saveTask(taskObj);
+
+
+    taskInput.value = "";
 }
+
+
+function createTaskElement(taskObj) {
+    const li = document.createElement("li");
+    li.innerHTML = `
+        <span class="${taskObj.completed ? "completed" : ""}">${taskObj.text}</span>
+        <button class="delete-btn">X</button>
+    `;
+
+    taskList.appendChild(li);
+
+
+    li.querySelector("span").addEventListener("click", function () {
+        taskObj.completed = !taskObj.completed;
+        this.classList.toggle("completed", taskObj.completed);
+        updateTaskStatus(taskObj.text, taskObj.completed);
+    });
+
+
+    li.querySelector(".delete-btn").addEventListener("click", function () {
+        li.remove();
+        removeTask(taskObj.text);
+    });
+}
+
+
+function saveTask(taskObj) {
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    tasks.push(taskObj);
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+
+function loadTasks() {
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    tasks.forEach(createTaskElement);
+}
+
+
+function updateTaskStatus(taskText, completed) {
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    tasks = tasks.map(task => 
+        task.text === taskText ? { ...task, completed } : task
+    );
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
 
 function removeTask(taskText) {
-    console.log("remove task fired");
-
     let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    tasks = tasks.filter((task) => task !== taskText);
+    tasks = tasks.filter(task => task.text !== taskText);
     localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
-function saveTask(task) {
-    log("save task fired");
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    tasks.push(task);
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-}
-addTaskBtn.addEventListener("click", addItem);
+
+addTaskBtn.addEventListener("click", addTask);
+
 
 taskInput.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
-        addItem();
+        addTask();
     }
 });

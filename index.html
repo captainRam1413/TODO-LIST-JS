@@ -1,15 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TODO List</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <h1>TODO List</h1>
-        <input type="text" id="taskInput" placeholder="Add a new task...">
+        
+        <input type="text" id="searchTask" placeholder="Search tasks...">
+
+        <!-- Task Input -->
+        <input type="text" id="taskInput" placeholder="Enter a task">
+        <input type="date" id="dueDate">
         <button id="addTask">Add Task</button>
         <div class="filters">
             <button id="showAll">All</button>
@@ -19,8 +26,9 @@
         <ul id="taskList"></ul>
         <button id="clearAll">Clear All Tasks</button>
     </div>
-    
-    
+
+
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -1,195 +1,184 @@
-
 const taskInput = document.getElementById("taskInput");
-const addTaskBtn = document.getElementById("addTask");
-const taskList = document.getElementById("taskList");
-const showAllBtn = document.getElementById("showAll");
-const showCompletedBtn = document.getElementById("showCompleted");
-const showPendingBtn = document.getElementById("showPending");
-const clearAllBtn = document.getElementById("clearAll");
 const dueDateInput = document.getElementById("dueDate");
+const taskCategory = document.getElementById("taskCategory");
+const taskPriority = document.getElementById("taskPriority");
+const taskList = document.getElementById("taskList");
+const addTaskBtn = document.getElementById("addTask");
 const searchTaskInput = document.getElementById("searchTask");
 const sortTasksDropdown = document.getElementById("sortTasks");
+const filterTasksDropdown = document.getElementById("filterTasks");
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+const toggleDarkModeBtn = document.getElementById("toggleDarkMode");
 
-
-function clearAllTasks() {
-    if (confirm("Are you sure you want to delete all tasks?")) {
-        taskList.innerHTML = "";
-        localStorage.removeItem("tasks"); 
-    }
-}
-
-clearAllBtn.addEventListener("click", clearAllTasks);
-
-document.addEventListener("DOMContentLoaded", loadTasks);
-
-
-function addTask() {
-    const taskText = taskInput.value.trim();
-    const dueDate = dueDateInput.value;
-
-    if (taskText === "") {
-        alert("Task cannot be empty!");
-        return;
-    }
-
-    const taskObj = { text: taskText, completed: false, dueDate };
-
-    createTaskElement(taskObj);
-    saveTask(taskObj);
-
-    taskInput.value = "";
-    dueDateInput.value = ""; 
-}
-
-function createTaskElement(taskObj) {
-    const li = document.createElement("li");
-    li.innerHTML = `
-        <span class="${taskObj.completed ? "completed" : ""}">${taskObj.text}</span>
-        <span class="due-date">${taskObj.dueDate ? `Due: ${taskObj.dueDate}` : ""}</span>
-        <button class="edit-btn">Edit</button>
-        <button class="delete-btn">X</button>
-    `;
-
-    taskList.appendChild(li);
-
-    // Mark as completed on click
-    li.querySelector("span").addEventListener("click", function () {
-        taskObj.completed = !taskObj.completed;
-        this.classList.toggle("completed", taskObj.completed);
-        updateTaskStatus(taskObj.text, taskObj.completed);
-    });
-
-    // Edit task
-    li.querySelector(".edit-btn").addEventListener("click", function () {
-        editTask(taskObj.text);
-    });
-
-    // Delete task
-    li.querySelector(".delete-btn").addEventListener("click", function () {
-        li.remove();
-        removeTask(taskObj.text);
-    });
-
-    li.dataset.completed = taskObj.completed; // Add dataset for filtering
-}
-
-function checkDueDates() {
-    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
-    document.querySelectorAll(".due-date").forEach(dueDateEl => {
-        if (dueDateEl.textContent.includes("Due:")) {
-            const taskDueDate = dueDateEl.textContent.replace("Due: ", "").trim();
-            if (taskDueDate < today) {
-                dueDateEl.classList.add("overdue");
-            } else {
-                dueDateEl.classList.remove("overdue");
-            }
-        }
-    });
-}
-
-// Function to sort tasks
-function sortTasks() {
-    const sortBy = sortTasksDropdown.value;
-    let tasks = Array.from(document.querySelectorAll("#taskList li"));
-
-    if (sortBy === "dueDate") {
-        tasks.sort((a, b) => {
-            const dateA = a.querySelector(".due-date").textContent.replace("Due: ", "").trim();
-            const dateB = b.querySelector(".due-date").textContent.replace("Due: ", "").trim();
-            return new Date(dateA) - new Date(dateB);
-        });
-    } else if (sortBy === "completed") {
-        tasks.sort((a, b) => {
-            const completedA = a.dataset.completed === "true" ? 1 : 0;
-            const completedB = b.dataset.completed === "true" ? 1 : 0;
-            return completedA - completedB; // Sort uncompleted tasks first
-        });
-    }
-
-    // Clear and re-add sorted tasks
-    taskList.innerHTML = "";
-    tasks.forEach(task => taskList.appendChild(task));
-}
-
-// Event Listener for sorting
-sortTasksDropdown.addEventListener("change", sortTasks);
-
-// Call checkDueDates when page loads
-document.addEventListener("DOMContentLoaded", checkDueDates);
-
-function saveTask(taskObj) {
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    tasks.push(taskObj);
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-}
-function editTask(oldText) {
-    const newText = prompt("Edit your task:", oldText);
-    if (newText === null || newText.trim() === "") return;
-
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    tasks = tasks.map(task =>
-        task.text === oldText ? { ...task, text: newText } : task
-    );
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-
-    loadTasks();
-}
-
-function searchTasks() {
-    const query = searchTaskInput.value.toLowerCase();
-    const tasks = document.querySelectorAll("li");
-
-    tasks.forEach(task => {
-        const taskText = task.querySelector("span").textContent.toLowerCase();
-        task.style.display = taskText.includes(query) ? "flex" : "none";
-    });
-}
-searchTaskInput.addEventListener("input", searchTasks);
-function loadTasks() {
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    taskList.innerHTML = "";
-    tasks.forEach(createTaskElement);
-}
-
-
-function updateTaskStatus(taskText, completed) {
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    tasks = tasks.map(task =>
-        task.text === taskText ? { ...task, completed } : task
-    );
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-}
-
-function removeTask(taskText) {
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    tasks = tasks.filter(task => task.text !== taskText);
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-}
-
-function filterTasks(filterType) {
-    const tasks = document.querySelectorAll("li");
-    tasks.forEach(task => {
-        const isCompleted = task.dataset.completed === "true";
-
-        if (filterType === "all") {
-            task.style.display = "flex";
-        } else if (filterType === "completed" && isCompleted) {
-            task.style.display = "flex";
-        } else if (filterType === "pending" && !isCompleted) {
-            task.style.display = "flex";
-        } else {
-            task.style.display = "none";
-        }
-    });
-}
-
-showAllBtn.addEventListener("click", () => filterTasks("all"));
-showCompletedBtn.addEventListener("click", () => filterTasks("completed"));
-showPendingBtn.addEventListener("click", () => filterTasks("pending"));
-
-addTaskBtn.addEventListener("click", addTask);
-taskInput.addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-        addTask();
-    }
+// Load stored theme and tasks
+document.addEventListener("DOMContentLoaded", () => {
+  loadTasks();
+  checkDarkMode();
 });
+
+// 🌙 Toggle Dark Mode
+toggleDarkModeBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+});
+
+// 📌 Save tasks to Local Storage
+function saveTasksToLocalStorage() {
+  const tasks = getAllTasks();
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  updateProgressBar();
+}
+
+// 📌 Get all tasks
+// 📌 Get all tasks (Fully Fixed)
+function getAllTasks() {
+  return Array.from(document.querySelectorAll(".task-card")).map(task => ({
+    text: task.querySelector(".task-text").textContent,
+    completed: task.classList.contains("completed"), // Get correct completion status
+    dueDate: task.querySelector(".due-date").textContent.replace("Due: ", "").trim(),
+    category: task.querySelector(".category-tag").textContent,
+    priority: task.querySelector(".priority-tag").textContent
+  }));
+}
+
+
+// ➕ Add a new task
+function addTask() {
+  const taskText = taskInput.value.trim();
+  const dueDate = dueDateInput.value;
+  const category = taskCategory.value;
+  const priority = taskPriority.value;
+
+  if (taskText === "") {
+    alert("Task cannot be empty!");
+    return;
+  }
+
+  const taskObj = { text: taskText, completed: false, dueDate, category, priority };
+  createTaskElement(taskObj);
+  saveTasksToLocalStorage();
+
+  taskInput.value = "";
+  dueDateInput.value = "";
+}
+
+// 🎨 Create task element
+function createTaskElement(taskObj) {
+  const li = document.createElement("li");
+  li.classList.add("task-item");
+  li.dataset.completed = taskObj.completed;
+  li.innerHTML = `
+    
+    <div class="task-card ${taskObj.completed ? "completed" : "card"}" data-id="${taskObj.id}">
+    <div class="task-header">
+        <span class="task-text">${taskObj.text}</span>
+        <span class="priority-tag ${taskObj.priority.toLowerCase()}-priority">${taskObj.priority}</span>
+    </div>
+    
+    <div class="task-details">
+        <span class="category-tag">${taskObj.category}</span>
+        <span class="due-date ${checkOverdue(taskObj.dueDate) ? "overdue" : ""}">
+            ${taskObj.dueDate ? `📅 Due: ${taskObj.dueDate}` : "No Due Date"}
+        </span>
+    </div>
+
+    <div class="task-actions">
+        <button class="edit-btn">
+            <i class="fas fa-edit"></i> ✏️ Edit
+        </button>
+        <button class="delete-btn">
+            <i class="fas fa-trash-alt"></i> 🗑️ Delete
+        </button>
+    </div>
+</div>
+
+`;
+
+  taskList.appendChild(li);
+
+  li.querySelector(".task-text").addEventListener("click", () => {
+    taskObj.completed = !taskObj.completed;
+    li.dataset.completed = taskObj.completed;
+    li.querySelector(".task-card").classList.toggle("completed", taskObj.completed);
+    saveTasksToLocalStorage();
+  });
+
+  li.querySelector(".edit-btn").addEventListener("click", () => {
+    const newText = prompt("Edit your task:", taskObj.text);
+    if (newText) {
+      taskObj.text = newText;
+      li.querySelector(".task-text").textContent = newText;
+      saveTasksToLocalStorage();
+    }
+  });
+
+  li.querySelector(".delete-btn").addEventListener("click", () => {
+    li.style.opacity = "0";
+    li.style.transform = "scale(0.9)";
+    setTimeout(() => {
+      li.remove();
+      saveTasksToLocalStorage();
+    }, 300);
+  });
+
+  updateProgressBar();
+}
+
+// 🚨 Check for Overdue Tasks
+function checkOverdue(dueDate) {
+  if (!dueDate) return false;
+  return new Date(dueDate) < new Date();
+}
+
+// 📊 Update Progress Bar (Fully Fixed)
+function updateProgressBar() {
+  const tasks = JSON.parse(localStorage.getItem("tasks")) || []; // Load tasks from storage
+  const completedTasks = tasks.filter(task => task.completed).length;
+  const totalTasks = tasks.length;
+  const percentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+  progressBar.value = percentage; // Set the progress bar value
+  progressBar.style.width = `${percentage}%`; // Set width dynamically
+  progressText.textContent = `${Math.round(percentage)}% Completed`;
+}
+
+
+
+// 🛠️ Load tasks from Local Storage
+function loadTasks() {
+  const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+  savedTasks.forEach(createTaskElement);
+  updateProgressBar();
+}
+
+// 🔍 Search Tasks
+searchTaskInput.addEventListener("input", function () {
+  const searchText = searchTaskInput.value.toLowerCase();
+  document.querySelectorAll(".task-item").forEach(task => {
+    const taskText = task.querySelector(".task-text").textContent.toLowerCase();
+    task.style.display = taskText.includes(searchText) ? "" : "none";
+  });
+});
+
+// 🔃 Sort Tasks
+sortTasksDropdown.addEventListener("change", function () {
+  const sortBy = sortTasksDropdown.value;
+  let tasks = getAllTasks();
+
+  if (sortBy === "dueDate") {
+    tasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+  } else if (sortBy === "priority") {
+    const priorityOrder = { High: 1, Medium: 2, Low: 3 };
+    tasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  }
+
+  taskList.innerHTML = "";
+  tasks.forEach(createTaskElement);
+  saveTasksToLocalStorage();
+});
+
+// 🛠️ Event Listeners
+addTaskBtn.addEventListener("click", addTask);
+sortTasksDropdown.addEventListener("change", sortTasks);
+searchTaskInput.addEventListener("input", searchTasks);
